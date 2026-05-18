@@ -32,17 +32,12 @@ if(messageTextarea){
 const contactForm =
 document.getElementById('contactForm');
 
-contactForm.addEventListener(
-    'submit',
-    (e) => {
-
+if (contactForm) {
+    contactForm.addEventListener('submit', (e) => {
         e.preventDefault();
-
-        alert(
-            'Mesaj trimis cu succes!'
-        );
-    }
-);
+        alert('Mesaj trimis cu succes!');
+    });
+}
 
 /* =========================
    DARK MODE ENGINE
