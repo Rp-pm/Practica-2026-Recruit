@@ -27,9 +27,71 @@
 
     let firstClickRecorded = false;
 
-    // -----------------------------
-    // PERFORMANCE
-    // -----------------------------
+    /* =========================
+       STATE MANAGEMENT (WEB STORAGE)
+    ========================= */
+
+    const optOut = localStorage.getItem("utm_optout");
+    let telemetryDisabled = false;
+
+    if (optOut === "true") {
+        console.log("🚫 Telemetrie dezactivată (GDPR)");
+        telemetryDisabled = true;
+    }
+
+    // -------------------------
+    // VISITS (localStorage safe)
+    // -------------------------
+    let visitCount;
+
+    try {
+        visitCount = parseInt(localStorage.getItem("utm_telemetry_visits"), 10);
+
+        if (isNaN(visitCount)) {
+            visitCount = 0;
+        }
+
+        visitCount += 1;
+
+    } catch (e) {
+        visitCount = 1;
+    }
+
+    localStorage.setItem("utm_telemetry_visits", visitCount);
+
+    // -------------------------
+    // SESSION START (timestamp fix)
+    // -------------------------
+    let sessionStartTime = sessionStorage.getItem("utm_session_start_time");
+
+    if (!sessionStartTime) {
+        sessionStartTime = Date.now();
+        sessionStorage.setItem("utm_session_start_time", sessionStartTime);
+    }
+
+    // -------------------------
+    // SESSION HISTORY (safe parse)
+    // -------------------------
+    let sessionHistory = [];
+
+    try {
+        sessionHistory = JSON.parse(localStorage.getItem("utm_session_durations")) || [];
+        if (!Array.isArray(sessionHistory)) sessionHistory = [];
+    } catch (e) {
+        sessionHistory = [];
+    }
+
+    telemetryData.userProfile = {
+        historicalVisits: visitCount,
+        sessionStartedAt: sessionStartTime,
+        isNewUser: visitCount === 1,
+        sessionHistory: sessionHistory
+    };
+
+    /* =========================
+       PERFORMANCE
+    ========================= */
+
     function collectPerformanceMetrics() {
         if (!window.performance) return;
 
@@ -56,9 +118,10 @@
         });
     }
 
-    // -----------------------------
-    // ERROR TRACKING
-    // -----------------------------
+    /* =========================
+       ERROR TRACKING
+    ========================= */
+
     window.onerror = function (msg, src, line, col, err) {
         telemetryData.errors.push({
             message: msg,
@@ -72,9 +135,10 @@
         dispatchTelemetry("error");
     };
 
-    // -----------------------------
-    // FIRST CLICK
-    // -----------------------------
+    /* =========================
+       FIRST CLICK
+    ========================= */
+
     function trackFirstInput() {
         window.addEventListener("click", function handler() {
             if (firstClickRecorded) return;
@@ -97,10 +161,14 @@
         });
     }
 
-    // -----------------------------
-    // SEND DATA (SAFE)
-    // -----------------------------
+    /* =========================
+       SEND DATA
+    ========================= */
+
     function dispatchTelemetry(type) {
+
+        if (telemetryDisabled) return;
+
         const payload = JSON.stringify({
             type,
             ...telemetryData
@@ -109,40 +177,78 @@
         console.log("[TELEMETRIE]", type, telemetryData);
 
         try {
-            if (navigator.sendBeacon) {
-                navigator.sendBeacon(endpoint, payload);
-            } else {
-                fetch(endpoint, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: payload,
-                    keepalive: true
-                }).catch(() => {});
-            }
+            navigator.sendBeacon?.(endpoint, payload);
         } catch (e) {
-            console.warn("Telemetry blocked:", e);
+            console.warn("Telemetry error:", e);
         }
     }
 
-    // -----------------------------
-    // INIT
-    // -----------------------------
+    /* =========================
+       INIT
+    ========================= */
+
     function init() {
         collectPerformanceMetrics();
         trackFirstInput();
+
+        console.group("📊 WEB STORAGE STATE");
+        console.log("Visits:", visitCount);
+        console.log("Session start:", sessionStartTime);
+        console.groupEnd();
 
         setTimeout(() => {
             dispatchTelemetry("load");
         }, 500);
     }
 
-    // Safe startup
+    /* =========================
+       START
+    ========================= */
+
     if ('requestIdleCallback' in window) {
         requestIdleCallback(init);
     } else {
         window.addEventListener("load", init);
     }
+
+    /* =========================
+       SESSION DURATION + HISTORY
+    ========================= */
+
+    window.addEventListener("beforeunload", () => {
+
+        try {
+            const start = Number(sessionStartTime);
+            const end = Date.now();
+
+            const durationSec = Math.floor((end - start) / 1000);
+
+            let history = [];
+
+            try {
+                history = JSON.parse(localStorage.getItem("utm_session_durations")) || [];
+                if (!Array.isArray(history)) history = [];
+            } catch (e) {
+                history = [];
+            }
+
+            history.push(durationSec);
+
+            localStorage.setItem(
+                "utm_session_durations",
+                JSON.stringify(history)
+            );
+
+            const avg =
+                history.reduce((a, b) => a + b, 0) / history.length;
+
+            console.log("⏱ Durată sesiune:", durationSec);
+            console.log("📊 Media sesiunilor:", avg.toFixed(2));
+
+        } catch (e) {
+            console.warn("Corrupted storage → reset");
+            localStorage.removeItem("utm_session_durations");
+        }
+    });
 
 })();

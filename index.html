@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+<link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
 <meta http-equiv="Content-Security-Policy" content="
 default-src 'self';
 script-src 'self' 'unsafe-inline' https://trusted.com;
@@ -14,7 +16,7 @@ frame-src 'self' https://googleusercontent.com https://jumpshare.com https://www
 ">
 
     <title>AgencyRecruit — Theming Engine</title>
-    <link rel="stylesheet" href="assets/css/style.css" />
+    <link rel="stylesheet" href="assets/css/style.min.css" />
 </head>
 
 <body>
@@ -282,10 +284,11 @@ frame-src 'self' https://googleusercontent.com https://jumpshare.com https://www
             <p>contact@recrutare.md</p>
 
             <div class="map-wrapper">
-
+<!-- Interface Hardening: Sandboxed Iframes & Outbound Isolation by: Stodolnean Sergiu | Data: 19.05.2026 -->
                 <iframe
                     src="https://www.google.com/maps?q=Chisinau,+Moldova&output=embed"
-                    loading="lazy">
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin">
                 </iframe>
 
             </div>
@@ -304,22 +307,55 @@ frame-src 'self' https://googleusercontent.com https://jumpshare.com https://www
         <div class="video-presentation">
             <h3>Video Prezentare</h3>
             <div class="video-wrapper">
-               <iframe id="js_video_iframe" src="https://jumpshare.com/embed/6F7sGdLIjUPsRGeQFwNo" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
-            </div>
+                <!-- Interface Hardening: Sandboxed Iframes & Outbound Isolation by: Stodolnean Sergiu | Data: 19.05.2026 -->
+
+        <iframe 
+            id="js_video_iframe"
+            src="https://jumpshare.com/embed/6F7sGdLIjUPsRGeQFwNo"
+            frameborder="0"
+            allowfullscreen
+            sandbox="allow-scripts allow-same-origin allow-presentation"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+        </iframe>
         </div>
 
         <div class="location-map">
             <h3>Locația Noastră</h3>
             <div class="map-container">
+<!-- SP controlează ce surse pot fi încărcate în iframe prin frame-src, iar sandbox
+  limitează acțiunile conținutului după ce este încărcat. CSP acționează ca o barieră de acces,
+   iar sandbox ca o izolare a execuției. Împreună oferă protecție în două straturi (defense-in-depth).-->
+ 
+ 
+   <!-- Interface Hardening: Sandboxed Iframes & Outbound Isolation by: Stodolnean Sergiu | Data: 19.05.2026 -->
                 <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d87010.15852570077!2d28.81057475!3d47.01183145!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c97c3628b769a1%3A0x2374286f4484e2d2!2zQ2hpyJlpbsSDdSwgTW9sZG92YQ!5e0!3m2!1sro!2s!4v1715585000000!5m2!1sro!2s"
-                    loading="lazy">
+                    loading="lazy"
+                        sandbox="allow-scripts allow-same-origin">
                 </iframe>
             </div>
         </div>
 
     </div>
 </section>
+
+<!-- SECURED OUTBOUND LINKS -->
+<footer class="footer">
+  <p>Proiect realizat în cadrul UTM de către Stodolnean Sergiu</p>
+
+  <div class="social-links">
+
+    <!-- Securizare strictă prin noopener și noreferrer -->
+    <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-links__item">
+      GitHub Oficial
+    </a>
+
+    <a href="https://utm.md" target="_blank" rel="noopener noreferrer" class="social-links__item">
+      Portal UTM
+    </a>
+
+  </div>
+</footer>
 
 <!-- CONTACT -->
 <section id="contact">
