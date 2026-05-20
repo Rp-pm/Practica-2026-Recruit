@@ -73,24 +73,22 @@ themeToggle.addEventListener(
 
 const neuralGlass = document.getElementById('neuralGlass');
 
-if(neuralGlass){
-    document.addEventListener('mousemove', (e) => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 2;
-        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+let ticking = false;
 
-        // Rotație 3D (FĂRĂ translate(-50%,-50%) pentru că acum folosim bottom/right)
-        neuralGlass.style.transform = `rotateX(${(-y * 20)}deg) rotateY(${(x * 20)}deg)`;
+document.addEventListener('mousemove', (e) => {
+    if (!ticking) {
+        window.requestAnimationFrame(() => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2;
+            const y = (e.clientY / window.innerHeight - 0.5) * 2;
 
-        // Glow tracking
-        neuralGlass.style.filter = `drop-shadow(${x * 20}px ${y * 20}px 20px rgba(0,200,255,0.4))`;
-    });
+            neuralGlass.style.transform =
+                `rotateX(${(-y * 20)}deg) rotateY(${(x * 20)}deg)`;
 
-    // Resetare la ieșirea mouse-ului
-    document.addEventListener('mouseleave', () => {
-        neuralGlass.style.transform = `rotateX(0deg) rotateY(0deg)`;
-        neuralGlass.style.filter = `none`;
-    });
-}
+            ticking = false;
+        });
+        ticking = true;
+    }
+});
 
 // Logică pentru trimiterea formularului securizat
 const accessForm = document.getElementById('accessForm');
